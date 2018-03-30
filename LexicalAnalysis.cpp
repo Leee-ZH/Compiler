@@ -1,12 +1,12 @@
 //
-//  LexicalAnalysis.cpp
-//  Compile
+//  Lexical.cpp
+//  Compiler
 //
 //  Created by Wave on 2018/3/23.
 //  Copyright © 2018年 Wave. All rights reserved.
 //
 
-#include "LexicalAnalysis.hpp"
+#include "Lexical.hpp"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -199,8 +199,8 @@ void addToken(vector<tokenOut>* result, string token, int Type = -1)
         }
         if (flag == 0)
         {
-            IDList.push_back(token);
             tmp.valInt = int(IDList.size());
+            IDList.push_back(token);
         }
     }
     else if (tmp.cate == INT)
@@ -452,7 +452,7 @@ vector<tokenOut>* Lexical(string file)
                     {
                         token = s.substr(start, 3);
                         addToken(&result, token);
-                        //formatPrint(token, start, start + 4);
+                        // formatPrint(token, start, start + 4);
                         start += 3;
                         end = start;
                         continue;
