@@ -497,4 +497,3 @@ vector<tokenOut>* Lexical(string file)
     }
     return &result;
 }
-
