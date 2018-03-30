@@ -1,12 +1,12 @@
 //
 //  main.cpp
-//  Compile
+//  Compiler
 //
 //  Created by Wave on 2018/3/23.
 //  Copyright © 2018年 Wave. All rights reserved.
 //
 
-#include "LexicalAnalysis.hpp"
+#include "Lexical.hpp"
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -24,9 +24,7 @@ public:
 };
 
 int main() {
-    vector<tokenOut>* tokens = Lexical("/Users/wave/Desktop/Compile/code.txt");
+    vector<tokenOut>* tokens = Lexical("/Users/wave/Downloads/Course/Compiler_Principle/Compiler/code.txt");
     printTokenVector(tokens);
     return 0;
 }
-
-
