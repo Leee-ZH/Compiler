@@ -1,13 +1,13 @@
 //
-//  LexicalAnalysis.hpp
-//  Compile
+//  Lexical.hpp
+//  Compiler
 //
 //  Created by Wave on 2018/3/23.
 //  Copyright © 2018年 Wave. All rights reserved.
 //
 
-#ifndef LexicalAnalysis_hpp
-#define LexicalAnalysis_hpp
+#ifndef Lexical_hpp
+#define Lexical_hpp
 
 #include <stdio.h>
 #include <string>
@@ -25,6 +25,7 @@ vector<string> split(string a);
 vector<tokenOut>* Lexical(string file);
 
 
-#endif /* LexicalAnalysis_hpp */
+#endif /* Lexical_hpp */
+
 
 
