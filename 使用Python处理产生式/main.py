@@ -1,5 +1,4 @@
 import xlrd
-import time
 
 
 def prodofx(prodofxx, prodlist):
@@ -30,8 +29,9 @@ def afterdot(idot):
 
 
 def getpvtfirst(path):
-    frawbook = (xlrd.open_workbook(path))
-    fgrammar = frawbook.sheet_by_index(3)
+    frawbook = xlrd.open_workbook(path)
+    fgrammar = frawbook.sheet_by_index(0)
+
     fproductionlist = list()
     for firows in range(fgrammar.nrows):
         frow = fgrammar.row_values(firows)
@@ -52,27 +52,71 @@ def getpvtfirst(path):
             if ftmp not in fproductionlist:
                 fproductionlist.append(ftmp)
 
-    fvt = frawbook.sheet_by_index(2)
+    fvt = set()
     fv = list()
     ft = list()
-    for firows in fvt.row_values(0):
-        if firows != '':
-            fv.append(firows)
-    for firows in fvt.row_values(1):
-        ft.append(firows)
+    for ifpl in fproductionlist:
+        if ifpl[0] != "translation_unit\'":
+            fvt.add(ifpl[0])
+            for iifpl in ifpl[1:]:
+                for iiifpl in iifpl:
+                    fvt.add(iiifpl)
+    for ifvt in fvt:
+        if 'a' <= ifvt[0] <= 'z':
+            if ifvt not in fv:
+                fv.append(ifvt)
+        else:
+            if ifvt not in ft:
+                ft.append(ifvt)
+    ft.sort()
+    fv.sort()
 
     for fit in ft:
         fproductionlist.append([fit, [fit]])
+    ffirst = list()
+    for ifv in fv:
+        ffirst.append([ifv])
+    for ift in ft:
+        ffirst.append([ift])
 
-    fsheet5 = frawbook.sheet_by_index(5)
-    ffirstx = list()
-    for fisheet5 in range(fsheet5.nrows):
-        fs5row = fsheet5.row_values(fisheet5)
-        while fs5row[-1] == '':
-            fs5row.pop()
-        ffirstx.append(fs5row)
+    for firstx in ffirst:
+        if firstx[0] in ft:
+            firstx.append(firstx[0])
+        else:
+            for flenpl in range(len(fproductionlist)):
+                if fproductionlist[flenpl][0] == firstx[0]:
+                    for lenprod in range(1, len(fproductionlist[flenpl])-1):
+                        if fproductionlist[flenpl][0] in ft and not fproductionlist[flenpl][0] in firstx:
+                            firstx.append(fproductionlist[flenpl][0])
+    
+    ffirstlen0 = list()
+    ffirstlen1 = list()
+    for ifirst in ffirst:
+        ffirstlen0.append(len(ifirst))
+    for ifirst in ffirst:
+        ffirstlen1.append(len(ifirst))
 
-    return fproductionlist, fv, ft, ffirstx
+    while True:
+        for ftmplen in range(len(ffirstlen0) - 1):
+            ffirstlen1[ftmplen] = ffirstlen0[ftmplen]
+        for ifirst in ffirst:
+            prodx = prodofx(ifirst[0], fproductionlist)
+            if prodx is not None and len(prodx) != 0:
+                for iprodx in prodx:
+                    if iprodx[0] in fv:
+                        firsty = firstofx(iprodx[0], ffirst)
+                        for ifirsty in firsty:
+                            if ifirsty not in ifirst:
+                                ifirst.append(ifirsty)
+                    elif iprodx[0] in ft:
+                        if iprodx[0] not in ifirst:
+                            ifirst.append(iprodx[0])
+        for ifirst in range(len(ffirst)):
+            ffirstlen0[ifirst] = len(ffirst[ifirst])
+        if ffirstlen0 == ffirstlen1:
+            break
+
+    return sorted(fproductionlist), sorted(fv), sorted(ft), sorted(ffirst)
 
 
 def getclosure(closurei):
@@ -140,7 +184,7 @@ def getitems(items):
     itemslen0 = len(items)
     while True:
         for iitems in items:
-            if len(items) == 1572:
+            if len(items) == 1572:              # Know that the length of items is 1572
                 return items
             print(len(items))
             for ipl0 in afterdot(iitems):
@@ -151,17 +195,138 @@ def getitems(items):
         if itemslen1 == itemslen0:
             break
         itemslen0 = itemslen1
-    return items
+    return sorted(items)
 
 
-# def outc(items):
+def outc(items, filepath):
+    countout = 0
+    outputc = open(filepath, 'w')
+    for iitems in range(len(items)):
+        outputc.write(str(countout)+'\n')
+        for iiitems in items[iitems]:
+            outputc.write(str(iiitems[0])+'\t')
+            for iiiitems in iiitems[1]:
+                outputc.write(str(iiiitems)+'\t')
+            outputc.write(str(iiitems[2])+'\n')
+        outputc.write('___\n')
+        countout += 1
+
+
+def readitems(readpath):
+    fread = xlrd.open_workbook(readpath)
+    fgrammar = fread.sheet_by_index(1)
+    reitems = list()
+    tmpc = list()
+    for firows in range(fgrammar.nrows):
+        frow = fgrammar.row_values(firows)
+        while frow[-1] == '':
+            frow.pop()
+        if frow[0] == '___':
+            reitems.append(tmpc)
+            tmpc = list()
+        elif not str(frow[0]).isdigit():
+            tmpc.append([frow[0], frow[1:-1], frow[-1]])
+    for ireitems in range(len(reitems)):
+        reitems[ireitems] = reitems[ireitems][1:]
+    return reitems
+
+
+def getabdot(statei, getv, gett):
+    rea = list()
+    reb = list()
+    redot = list()
+    for leni in range(len(statei)):
+        tmpprod = statei[leni]
+        tmpdotindex = dotindex(tmpprod[1])
+        if tmpdotindex == len(tmpprod[1])-1:
+            redot.append(1)
+            continue
+        else:
+            redot.append(0)
+        if tmpprod[1][tmpdotindex+1] in getv and tmpprod[1][tmpdotindex+1] not in reb:
+            reb.append(tmpprod[1][tmpdotindex+1])
+        elif tmpprod[1][tmpdotindex+1] in gett and tmpprod[1][tmpdotindex+1] not in rea:
+            rea.append(tmpprod[1][tmpdotindex+1])
+    return [rea, reb, redot]
+
+
+def getj(alpha, upa, prod):
+    for iprod in range(len(prod)):
+        if prod[iprod][0] == upa:
+            return iprod, prod[iprod].index(alpha)
+
+
+def gettable(ansic, prod, getv, gett):
+    retable = list()
+    tmpgett = list()
+    for igett in gett:
+        tmpgett.append(igett)
+    tmpgett.append('$')
+    for lenansi in range(len(ansic)):
+        tmpadd = list()
+        for lenvt in range(len(getv) + len(tmpgett)):
+            tmpadd.append('err')
+        retable.append(tmpadd)
+    for getk in range(len(ansic)):
+        tmpik = ansic[getk]
+        tmpa, tmpb, tmpdot = getabdot(tmpik, getv, gett)
+        for ia in tmpa:
+            tmpstate = goto(tmpik, ia)
+            if tmpstate in ansic:
+                retable[getk][tmpgett.index(ia)] = 'S ' + str(ansic.index(tmpstate))
+        for ib in tmpb:
+            tmpstate = goto(tmpik, ib)
+            if tmpstate in ansic:
+                retable[getk][len(tmpgett)+getv.index(ib)] = str(ansic.index(tmpstate))
+        for idot in range(len(tmpdot)):
+            if tmpdot[idot] == 1:
+                tmpalpha = tmpik[idot][1][:-1]
+                tmpupa = tmpik[idot][0]
+                tmpj = getj(tmpalpha, tmpupa, prod)
+                for lengett in range(len(tmpgett)):
+                    if retable[getk][lengett][0] != 'S':
+                        retable[getk][lengett] = 'R ' + str(tmpj[0]) + ' ' + str(tmpj[1])
+                if tmpupa == 'translation_unit!':
+                    retable[getk][len(tmpgett)-1] = 'acc'
+        print(getk)
+    return retable
+
+
+def printtable(ptable, filepath, printt, printv):
+    out = open(filepath, 'w')
+    out.write("\t")
+    for pt in printt:
+        out.write(str(pt)+"\t")
+    out.write("$\t")
+    for pv in printv:
+        out.write(str(pv)+"\t")
+    out.write("\n")
+    for getk in range(len(ptable)):
+        out.write(str(getk)+"\t")
+        for prow in ptable[getk]:
+            out.write(str(prow)+"\t")
+        out.write("\n")
+
+
+def printprod(prod):
+    for iprod in prod:
+        print(str(iprod[0]) + '\t\t', end='')
+        for iiprod in iprod[1:]:
+            for iiiprod in iiprod:
+                print(iiiprod + '\t', end='')
+            print('\t', end='')
+        print()
 
 
 if __name__ == "__main__":
-    time1 = time.time()
-    rawpath = "/Users/wave/Downloads/Course/Compiler_Principle/Compiler/Grammar.xlsx"
+    rawpath = "/Users/wave/Downloads/Course/Compiler_Principle/Compiler/ANSI_C.xlsx"
+    # outpath0 = "/Users/wave/Downloads/Course/Compiler_Principle/Compiler/testresult.txt"
+    outpath1 = "/Users/wave/Downloads/Course/Compiler_Principle/Compiler/table.txt"
     ProductionList, V, T, FirstX = getpvtfirst(rawpath)
-    I0 = getclosure([['translation_unit!', ['Dot', 'translation_unit'], '$']])
-    C = getitems([I0])
-    time2 = time.time()
-    print(time2-time1)
+    printprod(ProductionList)
+    # I0 = getclosure([['translation_unit!', ['Dot', 'translation_unit'], '$']])
+    # C = getitems([I0])
+    # outc(C, outpath0)
+    C = readitems(rawpath)
+    Table = gettable(C, ProductionList, V, T)
+    printtable(Table, outpath1, T, V)
