@@ -25,10 +25,11 @@ public:
 };
 
 int main() {
-    vector<tokenOut>* tokens = Lexical("/Users/wave/Downloads/Course/Compiler_Principle/Compiler/code.txt");
+    vector<tokenOut>* tokens = Lexical("/Users/wave/Downloads/Course/Compiler_Principle/Compiler/Compiler/code.txt");
     printTokenVector(tokens);
     vector<vector<string>> prod = readProd("/Users/wave/Downloads/Course/Compiler_Principle/Compiler/Grammar/Production.txt");
     vector<vector<string>> table = readTable("/Users/wave/Downloads/Course/Compiler_Principle/Compiler/Grammar/table.txt");
     Grammar(tokens, table, prod);
+    returnGlobalNameTable();
     return 0;
 }
