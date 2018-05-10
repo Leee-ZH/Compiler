@@ -14,15 +14,21 @@
 #include <string>
 #include <iostream>
 #include <cctype>
+#include <set>
 
 using namespace std;
 
 vector<vector<vector<string>>> Prod;
+nameTable global;
 
 const string ReservedWord[] = {"auto", "break", "case", "char", "const", "continue", "default",
     "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long",
     "register", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
     "nuion", "unsigned", "void", "volatile", "while"
+};
+
+const set<string> V = {
+    "primary_expression", "postfix_expression", "argument_expression_list", "unary_expression", "unary_operator", "cast_expression", "multiplicative_expression", "additive_expression", "shift_expression", "relational_expression", "equality_expression", "and_expression", "exclusive_or_expression", "inclusive_or_expression", "logical_and_expression", "logical_or_expression", "conditional_expression", "assignment_expression", "assignment_operator", "expression", "constant_expression", "declaration", "declaration_specifiers", "init_declarator_list", "init_declarator", "storage_class_specifier", "type_specifier", "struct_or_union_specifier", "struct_or_union", "struct_declaration_list", "struct_declaration", "specifier_qualifier_list", "struct_declarator_list", "struct_declarator", "enum_specifier", "enumerator_list", "enumerator", "type_qualifier", "declarator", "direct_declarator", "pointer", "type_qualifier_list", "parameter_type_list", "parameter_list", "parameter_declaration", "identifier_list", "type_name", "abstract_declarator", "direct_abstract_declarator", "initializer", "initializer_list", "statement", "labeled_statement", "compound_statement", "declaration_list", "statement_list", "expression_statement", "selection_statement", "iteration_statement", "jump_statement", "translation_unit", "external_declaration", "function_definition"
 };
 
 class tokenOut
@@ -33,6 +39,13 @@ public:
     double valFloat;
     string valString;
 };
+
+nameTable returnGlobalNameTable()
+{
+    for (int i = 0; i < global.getSize(); i++)
+        cout << global.content[i].type << "\t" << global.content[i].funVarName << "\t" << global.content[i].offsetList << endl;
+    return global;
+}
 
 int findIndex(vector<string> l0, string s)
 {
@@ -133,15 +146,9 @@ vector<string> getProd(vector<vector<vector<string>>> prodNow, int a, int b)
     return re;
 }
 
-vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, vector<vector<string>> prod)
+vector<vector<vector<string>>> getProdNow(vector<vector<string>> prod)
 {
-    vector<string> new1;
     vector<vector<vector<string>>> prodNow;
-    vector<int> stateStack;
-    vector<string> tokenVector;
-    vector<string> tokenNow;
-    int ip;
-    
     for (int i = 0; i < prod.size(); i++)
     {
         vector<vector<string>> tmpTableNow;
@@ -186,7 +193,12 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
         }
         prodNow.push_back(tmpTableNow);
     }
-    
+    return prodNow;
+}
+
+vector<string> getTokenNow(vector<tokenOut>* tokens)
+{
+    vector<string> tokenNow;
     for (int i = 0; i < (*tokens).size(); i++)
     {
         // cout << (*tokens)[i].cate << "\t" << (*tokens)[i].valInt << "\t" << (*tokens)[i].valFloat << "\t" << (*tokens)[i].valString << endl;
@@ -308,13 +320,23 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
                 tokenNow.push_back("?");
         }
     }
+    return tokenNow;
+}
+
+vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, vector<vector<string>> prod)
+{
+    vector<string> new1;
+    vector<int> stateStack;
+    vector<string> tokenVector;
+    vector<vector<vector<string>>> prodNow = getProdNow(prod);
+    vector<string> tokenNow = getTokenNow(tokens);
+    vector<string> poped;
+    int ip;
     
     tokenVector.push_back("$");
     for (int i = 0; i < tokenNow.size(); i++)
-    {
         tokenVector.push_back(tokenNow[i]);
         // cout << tokenNow[i] << endl;
-    }
     tokenVector.push_back("$");
     stateStack.push_back(0);
     ip = 1;
@@ -323,6 +345,7 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
     
     while (true)
     {
+        /*
         cout << "Token:\t";
         for (int i = 0; i < tokenLeft.size(); i++)
             cout << tokenLeft[i] << "\t";
@@ -334,6 +357,7 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
         cout << endl;
         
         cout << ip << endl << endl;
+        */
         
         int s = stateStack.back();
         string a = tokenVector[ip];
@@ -353,8 +377,6 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
             int stateTmpInt = atoi(stateTmp.substr(2, stateTmp.length() - 1).c_str());
             stateStack.push_back(stateTmpInt);
             tokenLeft.push_back(tokenVector[ip]);
-            if (tokenVector[ip] == "(")
-                cout << "\nHello World!" << endl;
             ip++;
             continue;
         }
@@ -373,9 +395,19 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
             // cout << stateTmp.substr(0, tabIndex) << "| |" << stateTmp.substr(tabIndex + 1, stateTmp.length()) << endl;
             int m = atoi(stateTmp.substr(0, tabIndex).c_str()), n = atoi(stateTmp.substr(tabIndex + 1, stateTmp.length()).c_str());
             vector<string> loopProd = getProd(prodNow, m, n);
+            cout << m << "\t" << n << endl;
             int lenProd = int(loopProd.size()) - 1;
             for (int i = 0; i < lenProd; i++)
             {
+                if (V.count(tokenLeft.back()) == 0)
+                {
+                    cout << tokenLeft.back() << endl;
+                    poped.push_back(tokenLeft.back());
+                }
+                cout << endl << "Pop:" << endl;
+                for (int j = 0; j < poped.size(); j++)
+                    cout << poped[j] << "\t";
+                cout << endl << endl;
                 tokenLeft.pop_back();
                 stateStack.pop_back();
             }
@@ -390,18 +422,26 @@ vector<string> Grammar(vector<tokenOut>* tokens, vector<vector<string>> table, v
                     for (int i = 0; i < lenProd + 1; i++)
                     {
                         if (i == 0)
-                            cout << loopProd[0] << "\t->\n\t";
+                        {
+                            cout << loopProd[0] << "\t->\t";
+                            new1.push_back(loopProd[0]);
+                        }
                         else
+                        {
                             cout << loopProd[i] << "\t";
+                            new1.push_back(loopProd[i]);
+                        }
                     }
-                    cout << endl << endl;
+                    cout << endl;
                     break;
                 }
             }
+            getTriAdd(m, n, poped, &global);
+            poped.clear();
         }
         else if (table[s+1][aIndex] == "acc")
         {
-            cout << "Successfully Reducted!" << endl;
+            cout << "\nSuccessfully Reducted!\n" << endl;
             return new1;
         }
         else
